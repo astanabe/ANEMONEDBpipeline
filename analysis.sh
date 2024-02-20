@@ -1,9 +1,7 @@
-team=ANEMONE
-project=2024ANEMONE
-projectfolder=/home/$USER/project/$team/$project
-run=RUN01
-runfolder=$projectfolder/$run
-mkdir -p $runfolder
+team=`pwd | perl -ne 'chomp;@path=split("/");print($path[-3])'`
+project=`pwd | perl -ne 'chomp;@path=split("/");print($path[-2])'`
+run=`pwd | perl -ne 'chomp;@path=split("/");print($path[-1])'`
+runfolder=`pwd`
 tempfolder=/work/$USER/temp/$team/$project/$run
 mkdir -p $tempfolder
 
@@ -23,12 +21,13 @@ clsplitseq \
 --forwardprimerfile=$runfolder/forwardprimer.fasta \
 --reverseprimerfile=$runfolder/reverseprimer.fasta \
 --truncateN=enable \
+--outputmultihit=enable \
 --index1file=$runfolder/index1.fasta \
 --index2file=$runfolder/index2.fasta \
 --minqualtag=30 \
+--seqnamestyle=illumina \
 --compress=xz \
 --numthreads=$THREADS \
---seqnamestyle=illumina \
 $tempfolder/fastq_undemultiplexed/*_R1_*.fastq.?? \
 $tempfolder/fastq_undemultiplexed/*_I1_*.fastq.?? \
 $tempfolder/fastq_undemultiplexed/*_I2_*.fastq.?? \
@@ -64,7 +63,7 @@ referencedb='cdu12s'
 blastdb='overall_species_wsp'
 includetaxa='\t(Aves)\t'
 else
-exit(1)
+exit 1
 fi
 standardfasta=$runfolder/$locus/standard.fasta
 stdconctable=$runfolder/$locus/stdconctable.tsv
@@ -155,7 +154,7 @@ elif test -e $tempfolder/$locus/chimeraremoved1; then
 alltsv=$tempfolder/$locus/chimeraremoved1/nonchimeras.tsv
 fastafile=$tempfolder/$locus/chimeraremoved1/nonchimeras.fasta
 else
-exit(1)
+exit 1
 fi
 
 # Make directory for output
@@ -163,15 +162,15 @@ mkdir -p \
 $tempfolder/$locus/taxonomy || exit $?
 
 # Set variables
-if test -e $projectfolder/../../$locus/qc_$blastdb.identdb; then
-qcidentdb=$projectfolder/../../$locus/qc_$blastdb.identdb
+if test -e $runfolder/../../../$locus/qc_$blastdb.identdb; then
+qcidentdb=$runfolder/../../../$locus/qc_$blastdb.identdb
 fi
-if test -e $projectfolder/../../$locus/3nn_$blastdb.identdb; then
-3nnidentdb=$projectfolder/../../$locus/3nn_$blastdb.identdb
+if test -e $runfolder/../../../$locus/3nn_$blastdb.identdb; then
+3nnidentdb=$runfolder/../../../$locus/3nn_$blastdb.identdb
 fi
-if ! test -e $projectfolder/../../$locus/qc_$blastdb.identdb && ! test -e $projectfolder/../../$locus/3nn_$blastdb.identdb; then
+if ! test -e $runfolder/../../../$locus/qc_$blastdb.identdb && ! test -e $runfolder/../../../$locus/3nn_$blastdb.identdb; then
 mkdir -p \
-$projectfolder/../../$locus || exit $?
+$runfolder/../../../$locus || exit $?
 fi
 
 # Assign taxonomy based on QCauto method using $blastdb
@@ -494,12 +493,12 @@ clsumtaxa \
 $tempfolder/$locus/community/sample_otu_matrix_target_estimated.tsv \
 $tempfolder/$locus/community/community_qc3nn_target_estimated.tsv || exit $?
 perl \
-$projectfolder/../../combinecommunity.pl \
+$runfolder/../../../combinecommunity.pl \
 $tempfolder/$locus/community/community_qc_target.tsv \
 $tempfolder/$locus/community/community_qc_target_estimated.tsv \
 $runfolder/$locus/community_qc_target.tsv || exit $?
 perl \
-$projectfolder/../../combinecommunity.pl \
+$runfolder/../../../combinecommunity.pl \
 $tempfolder/$locus/community/community_qc3nn_target.tsv \
 $tempfolder/$locus/community/community_qc3nn_target_estimated.tsv \
 $runfolder/$locus/community_qc3nn_target.tsv || exit $?
@@ -549,12 +548,12 @@ clsumtaxa \
 $tempfolder/$locus/community/sample_otu_matrix_nontarget_estimated.tsv \
 $tempfolder/$locus/community/community_qc3nn_nontarget_estimated.tsv || exit $?
 perl \
-$projectfolder/../../combinecommunity.pl \
+$runfolder/../../../combinecommunity.pl \
 $tempfolder/$locus/community/community_qc_nontarget.tsv \
 $tempfolder/$locus/community/community_qc_nontarget_estimated.tsv \
 $runfolder/$locus/community_qc_nontarget.tsv || exit $?
 perl \
-$projectfolder/../../combinecommunity.pl \
+$runfolder/../../../combinecommunity.pl \
 $tempfolder/$locus/community/community_qc3nn_nontarget.tsv \
 $tempfolder/$locus/community/community_qc3nn_nontarget_estimated.tsv \
 $runfolder/$locus/community_qc3nn_nontarget.tsv || exit $?
