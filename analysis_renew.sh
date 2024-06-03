@@ -213,6 +213,30 @@ watervoltable="$runfolder/$locus/watervoltable.tsv"
 
 echo $LINENO
 
+rm -rf \
+"$runfolder/$locus/demultiplexed" \
+"$tempfolder/$locus/demultiplexed" \
+"$runfolder/$locus/concatenated" \
+"$tempfolder/$locus/concatenated" \
+"$runfolder/$locus/filtered" \
+"$tempfolder/$locus/filtered" \
+"$runfolder/$locus/denoised" \
+"$tempfolder/$locus/denoised" \
+"$runfolder/$locus/chimeraremoved1" \
+"$tempfolder/$locus/chimeraremoved1" \
+"$runfolder/$locus/stdclustered" \
+"$tempfolder/$locus/stdclustered" \
+"$runfolder/$locus/chimeraremoved2" \
+"$tempfolder/$locus/chimeraremoved2" \
+"$runfolder/$locus/taxonomy" \
+"$tempfolder/$locus/taxonomy" \
+"$runfolder/$locus/community" \
+"$tempfolder/$locus/community" \
+"$runfolder/$locus/community_"*.tsv \
+"$tempfolder/$locus/community_"*.tsv || exit $?
+
+echo $LINENO
+
 if ! test -d "$tempfolder/$locus/demultiplexed" && ! test -d "$runfolder/$locus/demultiplexed"; then
 # Make directory for each locus
 mkdir -p \

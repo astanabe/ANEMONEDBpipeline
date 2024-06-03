@@ -25,137 +25,6 @@ export THREADS=`grep -c processor /proc/cpuinfo`
 
 echo $LINENO
 
-if test -d "$runfolder/fastq_undemultiplexed"; then
-
-echo $LINENO
-
-# Copy FASTQ files to temporary firectory
-if ! test -d "$tempfolder/fastq_undemultiplexed"; then
-cp -R \
-"$runfolder/fastq_undemultiplexed" \
-"$tempfolder/" || exit $?
-fi
-# Demultiplex Type A (If you have undemultiplexed FASTQ files)
-if ! test -d "$tempfolder/demultiplexed"; then
-for p in `ls "$tempfolder/fastq_undemultiplexed/"*_I1_*.fastq "$tempfolder/fastq_undemultiplexed/"*_I1_*.fastq.gz "$tempfolder/fastq_undemultiplexed/"*_I1_*.fastq.bz2 "$tempfolder/fastq_undemultiplexed/"*_I1_*.fastq.xz | grep -P -o '.+(?=_I1_.+\.fastq)'`
-do \
-clsplitseq \
---runname="$project$run" \
---forwardprimerfile="$runfolder/forwardprimer.fasta" \
---reverseprimerfile="$runfolder/reverseprimer.fasta" \
---truncateN=enable \
---outputmultihit=enable \
---index1file="$runfolder/index1.fasta" \
---index2file="$runfolder/index2.fasta" \
---minqualtag=30 \
---seqnamestyle=illumina \
---compress=xz \
---numthreads="$THREADS" \
---append \
-"$p"_R1_*.fastq \
-"$p"_I1_*.fastq \
-"$p"_I2_*.fastq \
-"$p"_R2_*.fastq \
-"$tempfolder/demultiplexed" || \
-clsplitseq \
---runname="$project$run" \
---forwardprimerfile="$runfolder/forwardprimer.fasta" \
---reverseprimerfile="$runfolder/reverseprimer.fasta" \
---truncateN=enable \
---outputmultihit=enable \
---index1file="$runfolder/index1.fasta" \
---index2file="$runfolder/index2.fasta" \
---minqualtag=30 \
---seqnamestyle=illumina \
---compress=xz \
---numthreads="$THREADS" \
---append \
-"$p"_R1_*.fastq.gz \
-"$p"_I1_*.fastq.gz \
-"$p"_I2_*.fastq.gz \
-"$p"_R2_*.fastq.gz \
-"$tempfolder/demultiplexed" || \
-clsplitseq \
---runname="$project$run" \
---forwardprimerfile="$runfolder/forwardprimer.fasta" \
---reverseprimerfile="$runfolder/reverseprimer.fasta" \
---truncateN=enable \
---outputmultihit=enable \
---index1file="$runfolder/index1.fasta" \
---index2file="$runfolder/index2.fasta" \
---minqualtag=30 \
---seqnamestyle=illumina \
---compress=xz \
---numthreads="$THREADS" \
---append \
-"$p"_R1_*.fastq.bz2 \
-"$p"_I1_*.fastq.bz2 \
-"$p"_I2_*.fastq.bz2 \
-"$p"_R2_*.fastq.bz2 \
-"$tempfolder/demultiplexed" || \
-clsplitseq \
---runname="$project$run" \
---forwardprimerfile="$runfolder/forwardprimer.fasta" \
---reverseprimerfile="$runfolder/reverseprimer.fasta" \
---truncateN=enable \
---outputmultihit=enable \
---index1file="$runfolder/index1.fasta" \
---index2file="$runfolder/index2.fasta" \
---minqualtag=30 \
---seqnamestyle=illumina \
---compress=xz \
---numthreads="$THREADS" \
---append \
-"$p"_R1_*.fastq.xz \
-"$p"_I1_*.fastq.xz \
-"$p"_I2_*.fastq.xz \
-"$p"_R2_*.fastq.xz \
-"$tempfolder/demultiplexed" || exit $?
-done
-fi
-# Delete temporary FASTQ files
-rm -rf "$tempfolder/fastq_undemultiplexed" || exit $?
-
-echo $LINENO
-
-elif test -d "$runfolder/fastq_demultiplexed"; then
-
-echo $LINENO
-
-# Copy FASTQ files to temporary firectory
-if ! test -d "$tempfolder/fastq_demultiplexed"; then
-cp -R \
-"$runfolder/fastq_demultiplexed" \
-"$tempfolder/" || exit $?
-fi
-# Demultiplex Type B (If FASTQ files have been already demultiplexed)
-if ! test -d "$tempfolder/demultiplexed"; then
-cltruncprimer \
---runname="$project$run" \
---forwardprimerfile="$runfolder/forwardprimer.fasta" \
---reverseprimerfile="$runfolder/reverseprimer.fasta" \
---truncateN=enable \
---outputmultihit=enable \
---index1file="$runfolder/index1.fasta" \
---index2file="$runfolder/index2.fasta" \
---seqnamestyle=illumina \
---compress=xz \
---numthreads="$THREADS" \
-"$tempfolder/fastq_demultiplexed" \
-"$tempfolder/demultiplexed" || exit $?
-fi
-# Delete temporary FASTQ files
-rm -rf "$tempfolder/fastq_demultiplexed" || exit $?
-
-echo $LINENO
-
-else
-echo $LINENO
-exit 1
-fi
-
-echo $LINENO
-
 # Repeat analysis on each locus
 for locus in `grep -P -o '^>\S+' "$runfolder/forwardprimer.fasta" | perl -npe 's/^>//'`
 do \
@@ -203,8 +72,7 @@ referencedb='cdu16s'
 blastdb='animals_16S_species'
 includetaxa='\t(Hexapoda)\t'
 else
-echo $LINENO
-exit 1
+(echo $LINENO; exit 1)
 fi
 standardfasta="$runfolder/$locus/standard.fasta"
 stdconctable="$runfolder/$locus/stdconctable.tsv"
@@ -213,15 +81,41 @@ watervoltable="$runfolder/$locus/watervoltable.tsv"
 
 echo $LINENO
 
-if ! test -d "$tempfolder/$locus/demultiplexed" && ! test -d "$runfolder/$locus/demultiplexed"; then
+rm -rf \
+"$tempfolder/$locus/demultiplexed" \
+"$runfolder/$locus/concatenated" \
+"$tempfolder/$locus/concatenated" \
+"$runfolder/$locus/filtered" \
+"$tempfolder/$locus/filtered" \
+"$runfolder/$locus/denoised" \
+"$tempfolder/$locus/denoised" \
+"$runfolder/$locus/chimeraremoved1" \
+"$tempfolder/$locus/chimeraremoved1" \
+"$runfolder/$locus/stdclustered" \
+"$tempfolder/$locus/stdclustered" \
+"$runfolder/$locus/chimeraremoved2" \
+"$tempfolder/$locus/chimeraremoved2" \
+"$runfolder/$locus/taxonomy" \
+"$tempfolder/$locus/taxonomy" \
+"$runfolder/$locus/community" \
+"$tempfolder/$locus/community" \
+"$runfolder/$locus/community_"*.tsv \
+"$tempfolder/$locus/community_"*.tsv || exit $?
+
+echo $LINENO
+
+if ! test -d "$tempfolder/$locus/demultiplexed"; then
 # Make directory for each locus
 mkdir -p \
-"$tempfolder/$locus/demultiplexed" || exit $?
-mkdir -p \
-"$runfolder/$locus" || exit $?
-# Move demultiplexed files
-ls "$tempfolder/demultiplexed/$project$run"__*__"$locus".*.fastq.xz \
-| xargs -I {} sh -c "mv -f {} \"$tempfolder/$locus/demultiplexed/\" || exit $?"
+"$tempfolder/$locus" || exit $?
+# Copy demultiplexed files
+if test -d "$runfolder/$locus/demultiplexed"; then
+cp -R \
+"$runfolder/$locus/demultiplexed" \
+"$tempfolder/$locus/" || exit $?
+else
+(echo $LINENO; exit 1)
+fi
 fi
 
 echo $LINENO
@@ -333,8 +227,7 @@ elif test -d "$runfolder/$locus/chimeraremoved1"; then
 alltsv="$runfolder/$locus/chimeraremoved1/nonchimeras.tsv"
 fastafile="$runfolder/$locus/chimeraremoved1/nonchimeras.fasta"
 else
-echo $LINENO
-exit 1
+(echo $LINENO; exit 1)
 fi
 
 echo $LINENO
