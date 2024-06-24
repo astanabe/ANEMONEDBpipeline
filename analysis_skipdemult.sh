@@ -88,7 +88,8 @@ mkdir -p \
 "$tempfolder/$locus" || exit $?
 # Copy demultiplexed files
 if test -d "$runfolder/$locus/demultiplexed"; then
-cp -R \
+cp \
+-RLf \
 "$runfolder/$locus/demultiplexed" \
 "$tempfolder/$locus/" || exit $?
 else
@@ -103,6 +104,7 @@ echo $LINENO
 if ! test -d "$tempfolder/$locus/concatenated" && ! test -d "$runfolder/$locus/concatenated"; then
 clconcatpairv \
 --mode="$ovlmode" \
+--output=directory \
 --compress=xz \
 --numthreads="$THREADS" \
 "$tempfolder/$locus/demultiplexed" \
@@ -119,6 +121,7 @@ clfilterseqv \
 --maxlen="$maxlen" \
 --maxnee=2.0 \
 --maxnNs=0 \
+--output=directory \
 --compress=xz \
 --numthreads="$THREADS" \
 "$tempfolder/$locus/concatenated" \
@@ -792,7 +795,7 @@ rm \
 -rf \
 "$tempfolder/$locus/taxonomy/cachedb_$blastdb" || exit $?
 cp \
--R \
+-RLf \
 "$tempfolder/$locus" \
 "$runfolder/" || exit $?
 rm \

@@ -31,7 +31,8 @@ echo $LINENO
 
 # Copy FASTQ files to temporary firectory
 if ! test -d "$tempfolder/fastq_undemultiplexed"; then
-cp -R \
+cp \
+-RLf \
 "$runfolder/fastq_undemultiplexed" \
 "$tempfolder/" || exit $?
 fi
@@ -124,7 +125,8 @@ echo $LINENO
 
 # Copy FASTQ files to temporary firectory
 if ! test -d "$tempfolder/fastq_demultiplexed"; then
-cp -R \
+cp \
+-RLf \
 "$runfolder/fastq_demultiplexed" \
 "$tempfolder/" || exit $?
 fi
@@ -230,6 +232,7 @@ echo $LINENO
 if ! test -d "$tempfolder/$locus/concatenated" && ! test -d "$runfolder/$locus/concatenated"; then
 clconcatpairv \
 --mode="$ovlmode" \
+--output=directory \
 --compress=xz \
 --numthreads="$THREADS" \
 "$tempfolder/$locus/demultiplexed" \
@@ -246,6 +249,7 @@ clfilterseqv \
 --maxlen="$maxlen" \
 --maxnee=2.0 \
 --maxnNs=0 \
+--output=directory \
 --compress=xz \
 --numthreads="$THREADS" \
 "$tempfolder/$locus/concatenated" \
@@ -919,7 +923,7 @@ rm \
 -rf \
 "$tempfolder/$locus/taxonomy/cachedb_$blastdb" || exit $?
 cp \
--R \
+-RLf \
 "$tempfolder/$locus" \
 "$runfolder/" || exit $?
 rm \
