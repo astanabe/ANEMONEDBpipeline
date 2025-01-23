@@ -3,9 +3,16 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 32
-#SBATCH -o runlog.txt
+#SBATCH -o runlog_%j.txt
 
-echo $HOSTNAME
+date --rfc-3339=seconds
+
+echo HOSTNAME=$HOSTNAME
+echo USER=$USER
+echo HOME=$HOME
+echo SHELL=$SHELL
+echo LANG=$LANG
+echo PATH=$PATH
 
 team=`pwd | perl -ne 'chomp;@path=split("/");print($path[-3])'`
 project=`pwd | perl -ne 'chomp;@path=split("/");print($path[-2])'`
@@ -477,7 +484,7 @@ fi
 
 echo $LINENO
 
-# Pick jawless vertebrates, cartilaginous fishes, ray-finned fishes, coelacanths and lungfishes
+# Pick target taxa
 grep -P "$includetaxa" \
 "$qctaxonomy" \
 | cut -f 1 \
@@ -771,7 +778,7 @@ echo $LINENO
 
 # Generate word cloud
 if test -n "$targettsv"; then
-cd "$tempfolder"
+cd "$tempfolder/$locus"
 clplotwordcloud \
 --taxfile="$qc3nntaxonomy" \
 --append \
@@ -779,8 +786,6 @@ clplotwordcloud \
 --anemone \
 "$targettsv" \
 samplename || exit $?
-ls -d "$project$run"__*__"$locus" \
-| xargs -I {} sh -c "mv -f {} \"$runfolder/$locus/\" || exit $?"
 cd "$runfolder"
 fi
 
@@ -821,6 +826,9 @@ unset qcidentdb
 unset threennidentdb
 unset qctaxonomy
 unset qc3nntaxonomy
+unset standardtsv
+unset targettsv
+unset nontargettsv
 
 echo $LINENO
 
@@ -831,3 +839,5 @@ echo $LINENO
 rm \
 -rf \
 "$tempfolder" || exit $?
+
+date --rfc-3339=seconds

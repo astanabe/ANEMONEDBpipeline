@@ -19,6 +19,7 @@ my $outputfolder = $ARGV[-1];
 my $solutionvoltable = 'solutionvoltable.tsv';
 my $watervoltable = 'watervoltable.tsv';
 my $stdconctable = 'stdconctable.tsv';
+my $blanklist = 'blanklist.txt';
 my $negativesamplelist = 'negativesamplelist.txt';
 
 my @sampleinfo = ('samp_name', 'project_name', 'correspondence', 'worldmesh', 'lat_lon', 'samp_taxon_id', 'samp_collec_device', 'samp_mat_process', 'collection_date', 'collection_date_local', 'collection_date_utc', 'temp', 'salinity', 'samp_size', 'size_frac_low', 'num_filter', 'filter_prod_name', 'biocide_used', 'samp_store_temp', 'samp_store_sol');
@@ -30,6 +31,7 @@ my %experimenttable;
 my %solutionvol;
 my %watervol;
 my %stdconc;
+my %blank;
 my %negativesample;
 {
 	if (-e $stdconctable) {
@@ -87,11 +89,21 @@ my %negativesample;
 		}
 		close($filehandleinput1);
 	}
+	if (-e $blanklist) {
+		open($filehandleinput1, "< $blanklist") or die(__LINE__ . ": Cannot open \"$blanklist\".\n");
+		while (<$filehandleinput1>) {
+			s/\r?\n?$//;
+			if ($_) {
+				$blank{$_} = 1;
+			}
+		}
+		close($filehandleinput1);
+	}
 	if (-e $negativesamplelist) {
 		open($filehandleinput1, "< $negativesamplelist") or die(__LINE__ . ": Cannot open \"$negativesamplelist\".\n");
 		while (<$filehandleinput1>) {
 			s/\r?\n?$//;
-			if ($_) {
+			if ($_ && !exists($blank{$_})) {
 				$negativesample{$_} = 1;
 			}
 		}
@@ -99,16 +111,16 @@ my %negativesample;
 	}
 }
 my $root = getcwd();
-my $locus;
 my $team;
 my $project;
 my $run;
+my $locus;
 {
 	my @path = split('/', $root);
-	$locus = $path[-4];
-	$team = $path[-3];
-	$project = $path[-2];
-	$run = $path[-1];
+	$team = $path[-4];
+	$project = $path[-3];
+	$run = $path[-2];
+	$locus = $path[-1];
 }
 
 foreach my $tempinputfile (@inputfiles) {
@@ -386,7 +398,7 @@ foreach my $line (keys(%table)) {
 			my @temp = split(/__/, lc($analysisname));
 			$temp[1] =~ s/[\-ー－―‐]0*//g;
 			if (exists($sterivex2samplename{$temp[1]})) {
-				my $newsamplename = $sterivex2samplename{$temp[1]};
+				my $newsamplename = $project . $run . '__' . $sterivex2samplename{$temp[1]} . '__' . $locus;
 				if (!-e "$outputfolder/$locus") {
 					if (!mkdir("$outputfolder/$locus")) {
 						die(__LINE__ . ": Cannot make \"$outputfolder/$locus\".");
@@ -470,8 +482,8 @@ foreach my $line (keys(%table)) {
 					open($filehandleoutput1, "> $outputfolder/$locus/$team/$project/$project$run/$newsamplename/sample.tsv") or die(__LINE__ . ": Cannot open \"$outputfolder/$locus/$team/$project/$project$run/$newsamplename/sample.tsv\".\n");
 					print($filehandleoutput1 "samplename\tkey\tvalue\n");
 					foreach my $sampleinfo (@sampleinfo) {
-						if (exists($sampletable{$newsamplename}{$sampleinfo}) && $sampletable{$newsamplename}{$sampleinfo}) {
-							print($filehandleoutput1 $newsamplename . "\t$sampleinfo\t" . $sampletable{$newsamplename}{$sampleinfo} . "\n");
+						if (exists($sampletable{$sterivex2samplename{$temp[1]}}{$sampleinfo}) && $sampletable{$sterivex2samplename{$temp[1]}}{$sampleinfo}) {
+							print($filehandleoutput1 $newsamplename . "\t$sampleinfo\t" . $sampletable{$sterivex2samplename{$temp[1]}}{$sampleinfo} . "\n");
 						}
 					}
 					close($filehandleoutput1);
@@ -479,8 +491,8 @@ foreach my $line (keys(%table)) {
 					open($filehandleoutput1, "> $outputfolder/$locus/$team/$project/$project$run/$newsamplename/experiment.tsv") or die(__LINE__ . ": Cannot open \"$outputfolder/$locus/$team/$project/$project$run/$newsamplename/experiment.tsv\".\n");
 					print($filehandleoutput1 "samplename\tkey\tvalue\n");
 					foreach my $experimentinfo (@experimentinfo) {
-						if (exists($experimenttable{$newsamplename}{$experimentinfo}) && $experimenttable{$newsamplename}{$experimentinfo}) {
-							print($filehandleoutput1 $newsamplename . "\t$experimentinfo\t" . $experimenttable{$newsamplename}{$experimentinfo} . "\n");
+						if (exists($experimenttable{$sterivex2samplename{$temp[1]}}{$experimentinfo}) && $experimenttable{$sterivex2samplename{$temp[1]}}{$experimentinfo}) {
+							print($filehandleoutput1 $newsamplename . "\t$experimentinfo\t" . $experimenttable{$sterivex2samplename{$temp[1]}}{$experimentinfo} . "\n");
 						}
 					}
 					if (exists($stdconc{$analysisname})) {
@@ -495,7 +507,12 @@ foreach my $line (keys(%table)) {
 					}
 					close($filehandleoutput1);
 					system("xz $outputfolder/$locus/$team/$project/$project$run/$newsamplename/experiment.tsv");
-					if (exists($negativesample{$analysisname})) {
+					if (exists($blank{$analysisname})) {
+						open($filehandleoutput1, "> $outputfolder/$locus/$team/$project/$project$run/$newsamplename/README.txt") or die(__LINE__ . ": Cannot open \"$outputfolder/$locus/$team/$project/$project$run/$newsamplename/README.txt\".\n");
+						print($filehandleoutput1 "This sample is NEGATIVE CONTROL. DO NOT USE for normal analysis.");
+						close($filehandleoutput1);
+					}
+					elsif (exists($negativesample{$analysisname})) {
 						open($filehandleoutput1, "> $outputfolder/$locus/$team/$project/$project$run/$newsamplename/README.txt") or die(__LINE__ . ": Cannot open \"$outputfolder/$locus/$team/$project/$project$run/$newsamplename/README.txt\".\n");
 						if ($newsamplename =~ /-NC$/) {
 							print($filehandleoutput1 "This sample is NEGATIVE CONTROL. DO NOT USE for normal analysis.");
