@@ -11,7 +11,6 @@ my $inputfolder = $ARGV[0];
 if (!-d $inputfolder) {
 	die(__LINE__);
 }
-my $url = $ARGV[1];
 
 # store taxonomic hierarchy
 my %parents;
@@ -176,7 +175,7 @@ foreach my $locus (@loci) {
 }
 # make taxonomy taxon
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name,slug,parent taxon`;
+	my $terms = `wp term list --format=csv --fields=term_id,name,slug,parent taxon`;
 	foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
 			my $nonum = $taxonname;
@@ -190,10 +189,10 @@ foreach my $locus (@loci) {
 			}
 			if ($terms !~ /\d+,\"?$nonum\"?,$slug,\d+\n/) {
 				if (exists($parents{$taxonname}) && $parents{$taxonname} && exists($taxonid{$parents{$taxonname}}) && $taxonid{$parents{$taxonname}}) {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
 				}
 				elsif ($rankname eq 'superkingdom') {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' taxon '$nonum'`;
 				}
 				elsif (exists($parents{$taxonname})) {
 					print(STDERR "There is no taxid of \"$parents{$taxonname}\" which is parent of \"$taxonname\".\n");
@@ -225,10 +224,10 @@ foreach my $locus (@loci) {
 }
 # make taxonomy yearmonth
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		if ($terms !~ /\d+,$year\n/) {
-			$yearmonthid{$year} = `wp term create --url='$url/' --porcelain yearmonth $year`;
+			$yearmonthid{$year} = `wp term create --porcelain yearmonth $year`;
 			$yearmonthid{$year} =~ s/\r?\n?$//;
 		}
 		elsif ($terms =~ /(\d+),$year\n/) {
@@ -237,7 +236,7 @@ foreach my $locus (@loci) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if ($terms !~ /\d+,$year-$month\n/) {
 				if (exists($yearmonthid{$year}) && $yearmonthid{$year}) {
-					$yearmonthid{"$year-$month"} = `wp term create --url='$url/' --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
+					$yearmonthid{"$year-$month"} = `wp term create --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
 					$yearmonthid{"$year-$month"} =~ s/\r?\n?$//;
 				}
 			}
@@ -248,12 +247,12 @@ foreach my $locus (@loci) {
 	}
 }
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if (!exists($yearmonthid{$month})) {
 				if ($terms !~ /\d+,$month\n/) {
-					$yearmonthid{$month} = `wp term create --url='$url/' --porcelain yearmonth $month`;
+					$yearmonthid{$month} = `wp term create --porcelain yearmonth $month`;
 					$yearmonthid{$month} =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$month\n/) {
@@ -265,10 +264,10 @@ foreach my $locus (@loci) {
 }
 # make taxonomy meshcode2
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name meshcode2`;
+	my $terms = `wp term list --format=csv --fields=term_id,name meshcode2`;
 	foreach my $worldmesh (sort(keys(%worldmesh))) {
 		if ($terms !~ /\d+,$worldmesh\n/) {
-			$meshcode2id{$worldmesh} = `wp term create --url='$url/' --porcelain meshcode2 $worldmesh`;
+			$meshcode2id{$worldmesh} = `wp term create --porcelain meshcode2 $worldmesh`;
 			$meshcode2id{$worldmesh} =~ s/\r?\n?$//;
 		}
 		elsif ($terms =~ /(\d+),$worldmesh\n/) {
@@ -281,7 +280,7 @@ foreach my $locus (@loci) {
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $samples = `wp post list --url='$url/' --post_type='sample' --format=csv --fields=ID,post_title`;
+	my $samples = `wp post list --post_type='sample' --format=csv --fields=ID,post_title`;
 	foreach my $locus (@loci) {
 		my @teams;
 		foreach my $temp (glob("$inputfolder/$locus/*")) {
@@ -292,9 +291,9 @@ foreach my $locus (@loci) {
 		}
 		my $locusid;
 		{
-			my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+			my $terms = `wp term list --format=csv --fields=term_id,name project`;
 			if ($terms !~ /\d+,$locus\n/) {
-				$locusid = `wp term create --url='$url/' --porcelain project $locus`;
+				$locusid = `wp term create --porcelain project $locus`;
 				$locusid =~ s/\r?\n?$//;
 			}
 			elsif ($terms =~ /(\d+),$locus\n/) {
@@ -311,9 +310,9 @@ foreach my $locus (@loci) {
 			}
 			my $teamid;
 			if ($locusid) {
-				my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+				my $terms = `wp term list --format=csv --fields=term_id,name project`;
 				if ($terms !~ /\d+,$team\n/) {
-					$teamid = `wp term create --url='$url/' --parent=$locusid --porcelain project $team`;
+					$teamid = `wp term create --parent=$locusid --porcelain project $team`;
 					$teamid =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$team\n/) {
@@ -330,9 +329,9 @@ foreach my $locus (@loci) {
 				}
 				my $projectid;
 				if ($teamid) {
-					my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+					my $terms = `wp term list --format=csv --fields=term_id,name project`;
 					if ($terms !~ /\d+,$project\n/) {
-						$projectid = `wp term create --url='$url/' --parent=$teamid --porcelain project $project`;
+						$projectid = `wp term create --parent=$teamid --porcelain project $project`;
 						$projectid =~ s/\r?\n?$//;
 					}
 					elsif ($terms =~ /(\d+),$project\n/) {
@@ -349,9 +348,9 @@ foreach my $locus (@loci) {
 					}
 					my $runid;
 					if ($projectid) {
-						my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+						my $terms = `wp term list --format=csv --fields=term_id,name project`;
 						if ($terms !~ /\d+,$run\n/) {
-							$runid = `wp term create --url='$url/' --parent=$projectid --porcelain project $run`;
+							$runid = `wp term create --parent=$projectid --porcelain project $run`;
 							$runid =~ s/\r?\n?$//;
 						}
 						elsif ($terms =~ /(\d+),$run\n/) {
@@ -376,7 +375,7 @@ foreach my $locus (@loci) {
 								next;
 							}
 							else {
-								system("wp post create --url='$url/' --post_author=1 --post_type='sample' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$sample' --post_excerpt='' --post_content='temp'");
+								system("wp post create --post_author=1 --post_type='sample' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$sample' --post_excerpt='' --post_content='temp'");
 								exit;
 							}
 						}
@@ -397,7 +396,7 @@ while (wait != -1) {
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $samples = `wp post list --url='$url/' --post_type='sample' --format=csv --fields=ID,post_title`;
+	my $samples = `wp post list --post_type='sample' --format=csv --fields=ID,post_title`;
 	foreach my $locus (@loci) {
 		my @teams;
 		foreach my $temp (glob("$inputfolder/$locus/*")) {
@@ -408,9 +407,9 @@ while (wait != -1) {
 		}
 		my $locusid;
 		{
-			my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+			my $terms = `wp term list --format=csv --fields=term_id,name project`;
 			if ($terms !~ /\d+,$locus\n/) {
-				$locusid = `wp term create --url='$url/' --porcelain project $locus`;
+				$locusid = `wp term create --porcelain project $locus`;
 				$locusid =~ s/\r?\n?$//;
 			}
 			elsif ($terms =~ /(\d+),$locus\n/) {
@@ -427,9 +426,9 @@ while (wait != -1) {
 			}
 			my $teamid;
 			if ($locusid) {
-				my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+				my $terms = `wp term list --format=csv --fields=term_id,name project`;
 				if ($terms !~ /\d+,$team\n/) {
-					$teamid = `wp term create --url='$url/' --parent=$locusid --porcelain project $team`;
+					$teamid = `wp term create --parent=$locusid --porcelain project $team`;
 					$teamid =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$team\n/) {
@@ -446,9 +445,9 @@ while (wait != -1) {
 				}
 				my $projectid;
 				if ($teamid) {
-					my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+					my $terms = `wp term list --format=csv --fields=term_id,name project`;
 					if ($terms !~ /\d+,$project\n/) {
-						$projectid = `wp term create --url='$url/' --parent=$teamid --porcelain project $project`;
+						$projectid = `wp term create --parent=$teamid --porcelain project $project`;
 						$projectid =~ s/\r?\n?$//;
 					}
 					elsif ($terms =~ /(\d+),$project\n/) {
@@ -465,9 +464,9 @@ while (wait != -1) {
 					}
 					my $runid;
 					if ($projectid) {
-						my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+						my $terms = `wp term list --format=csv --fields=term_id,name project`;
 						if ($terms !~ /\d+,$run\n/) {
-							$runid = `wp term create --url='$url/' --parent=$projectid --porcelain project $run`;
+							$runid = `wp term create --parent=$projectid --porcelain project $run`;
 							$runid =~ s/\r?\n?$//;
 						}
 						elsif ($terms =~ /(\d+),$run\n/) {
@@ -561,7 +560,7 @@ while (wait != -1) {
 								print($filehandleoutput1 <<"_END");
 <h2>Data file download URL</h2>
 <ul>
-<li><a href=\"$url/dist/$locus/$team/$project/$run/$sample/\">$url/dist/$locus/$team/$project/$run/$sample/</a></li>
+<li><a href=\"/dist/$locus/$team/$project/$run/$sample/\"><?php echo esc_url( home_url() ); ?>/dist/$locus/$team/$project/$run/$sample/</a></li>
 </ul>
 <h2>Sample information</h2>
 <ul>
@@ -717,7 +716,7 @@ _END
 								print($filehandleoutput1 "</table>");
 								close($filehandleoutput1);
 								# make or update sample page
-								system("wp post update --url='$url/' --post_author=1 --post_type='sample' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$sample' --post_date_gmt='$sampletable{'collection_date_utc'}' --post_date='$sampletable{'collection_date_local'}' --post_excerpt='$locus metabarcoding sample by $sampletable{'correspondence'}' $sampleid $inputfolder/$locus/$team/$project/$run/$sample/wordpress.html");
+								system("wp post update --post_author=1 --post_type='sample' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$sample' --post_date_gmt='$sampletable{'collection_date_utc'}' --post_date='$sampletable{'collection_date_local'}' --post_excerpt='$locus metabarcoding sample by $sampletable{'correspondence'}' $sampleid $inputfolder/$locus/$team/$project/$run/$sample/wordpress.html");
 								unlink("$inputfolder/$locus/$team/$project/$run/$sample/wordpress.html");
 								exit;
 							}

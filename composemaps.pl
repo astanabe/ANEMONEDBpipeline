@@ -11,7 +11,6 @@ my $inputfolder = $ARGV[0];
 if (!-d $inputfolder) {
 	die(__LINE__);
 }
-my $url = $ARGV[1];
 
 # store taxonomic hierarchy
 my %parents;
@@ -177,7 +176,7 @@ foreach my $locus (@loci) {
 }
 # make taxonomy taxon
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name,slug,parent taxon`;
+	my $terms = `wp term list --format=csv --fields=term_id,name,slug,parent taxon`;
 	foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
 			my $nonum= $taxonname;
@@ -191,10 +190,10 @@ foreach my $locus (@loci) {
 			}
 			if ($terms !~ /\d+,\"?$nonum\"?,$slug,\d+\n/) {
 				if (exists($parents{$taxonname}) && $parents{$taxonname} && exists($taxonid{$parents{$taxonname}}) && $taxonid{$parents{$taxonname}}) {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
 				}
 				elsif ($rankname eq 'superkingdom') {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' taxon '$nonum'`;
 				}
 				elsif (exists($parents{$taxonname})) {
 					print(STDERR "There is no taxid of \"$parents{$taxonname}\" which is parent of \"$taxonname\".\n");
@@ -226,10 +225,10 @@ foreach my $locus (@loci) {
 }
 # make taxonomy yearmonth
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		if ($terms !~ /\d+,$year\n/) {
-			$yearmonthid{$year} = `wp term create --url='$url/' --porcelain yearmonth $year`;
+			$yearmonthid{$year} = `wp term create --porcelain yearmonth $year`;
 			$yearmonthid{$year} =~ s/\r?\n?$//;
 		}
 		elsif ($terms =~ /(\d+),$year\n/) {
@@ -238,7 +237,7 @@ foreach my $locus (@loci) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if ($terms !~ /\d+,$year-$month\n/) {
 				if (exists($yearmonthid{$year}) && $yearmonthid{$year}) {
-					$yearmonthid{"$year-$month"} = `wp term create --url='$url/' --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
+					$yearmonthid{"$year-$month"} = `wp term create --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
 					$yearmonthid{"$year-$month"} =~ s/\r?\n?$//;
 				}
 			}
@@ -249,12 +248,12 @@ foreach my $locus (@loci) {
 	}
 }
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if (!exists($yearmonthid{$month})) {
 				if ($terms !~ /\d+,$month\n/) {
-					$yearmonthid{$month} = `wp term create --url='$url/' --porcelain yearmonth $month`;
+					$yearmonthid{$month} = `wp term create --porcelain yearmonth $month`;
 					$yearmonthid{$month} =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$month\n/) {
@@ -266,10 +265,10 @@ foreach my $locus (@loci) {
 }
 # make taxonomy meshcode2
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name meshcode2`;
+	my $terms = `wp term list --format=csv --fields=term_id,name meshcode2`;
 	foreach my $worldmesh (sort(keys(%worldmesh))) {
 		if ($terms !~ /\d+,$worldmesh\n/) {
-			$meshcode2id{$worldmesh} = `wp term create --url='$url/' --porcelain meshcode2 $worldmesh`;
+			$meshcode2id{$worldmesh} = `wp term create --porcelain meshcode2 $worldmesh`;
 			$meshcode2id{$worldmesh} =~ s/\r?\n?$//;
 		}
 		elsif ($terms =~ /(\d+),$worldmesh\n/) {
@@ -282,7 +281,7 @@ foreach my $locus (@loci) {
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $maps = `wp post list --url='$url/' --post_type='map' --format=csv --fields=ID,post_name`;
+	my $maps = `wp post list --post_type='map' --format=csv --fields=ID,post_name`;
 	foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
 			my $nonum= $taxonname;
@@ -306,7 +305,7 @@ foreach my $locus (@loci) {
 					next;
 				}
 				else {
-					system("wp post create --url='$url/' --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$nonum' --post_name='$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
+					system("wp post create --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$nonum' --post_name='$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
 					exit;
 				}
 			}
@@ -325,7 +324,7 @@ my %mapid;
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $maps = `wp post list --url='$url/' --post_type='map' --format=csv --fields=ID,post_name`;
+	my $maps = `wp post list --post_type='map' --format=csv --fields=ID,post_name`;
 	foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
 			my $nonum= $taxonname;
@@ -388,7 +387,7 @@ my %mapid;
 					next;
 				}
 				else {
-					system("wp post update --url='$url/' --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$nonum ($nsamples)' --post_name='$slug' --post_parent='$mapid{$parents{$taxonname}}' --post_excerpt='' $mapid{$taxonname} $slug.html");
+					system("wp post update --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$nonum ($nsamples)' --post_name='$slug' --post_parent='$mapid{$parents{$taxonname}}' --post_excerpt='' $mapid{$taxonname} $slug.html");
 					unlink("$slug.html");
 					exit;
 				}
@@ -407,7 +406,7 @@ while (wait != -1) {
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $maps = `wp post list --url='$url/' --post_type='map' --format=csv --fields=ID,post_name`;
+	my $maps = `wp post list --post_type='map' --format=csv --fields=ID,post_name`;
 	#foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 	foreach my $rankname ('genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
@@ -436,7 +435,7 @@ while (wait != -1) {
 							next;
 						}
 						else {
-							system("wp post create --url='$url/' --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$tempvalue - $nonum' --post_name='$tempvalue-$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
+							system("wp post create --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$tempvalue - $nonum' --post_name='$tempvalue-$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
 							exit;
 						}
 					}
@@ -459,7 +458,7 @@ while (wait != -1) {
 					#					next;
 					#				}
 					#				else {
-					#					system("wp post create --url='$url/' --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$tempvalue - $month - $nonum' --post_name='$tempvalue-$month-$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
+					#					system("wp post create --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='draft' --post_title='$tempvalue - $month - $nonum' --post_name='$tempvalue-$month-$slug' --post_parent='' --post_excerpt='' --post_content='temp'");
 					#					exit;
 					#				}
 					#			}
@@ -482,7 +481,7 @@ while (wait != -1) {
 	my $child = 0;
 	$| = 1;
 	$? = 0;
-	my $maps = `wp post list --url='$url/' --post_type='map' --format=csv --fields=ID,post_name`;
+	my $maps = `wp post list --post_type='map' --format=csv --fields=ID,post_name`;
 	#foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 	foreach my $rankname ('genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
@@ -559,7 +558,7 @@ while (wait != -1) {
 								next;
 							}
 							else {
-								system("wp post update --url='$url/' --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$tempvalue - $nonum ($nsamples)' --post_name='$tempvalue-$slug' --post_parent='$mapid{$taxonname}' --post_excerpt='' $tempmapid $tempvalue-$slug.html");
+								system("wp post update --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$tempvalue - $nonum ($nsamples)' --post_name='$tempvalue-$slug' --post_parent='$mapid{$taxonname}' --post_excerpt='' $tempmapid $tempvalue-$slug.html");
 								unlink("$tempvalue-$slug.html");
 								exit;
 							}
@@ -620,7 +619,7 @@ while (wait != -1) {
 					#					next;
 					#				}
 					#				else {
-					#					system("wp post update --url='$url/' --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$tempvalue - $month - $nonum ($nsamples)' --post_name='$tempvalue-$month-$slug' --post_parent='$tempmapid' --post_excerpt='' $tempmapid2 $tempvalue-$month-$slug.html");
+					#					system("wp post update --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$tempvalue - $month - $nonum ($nsamples)' --post_name='$tempvalue-$month-$slug' --post_parent='$tempmapid' --post_excerpt='' $tempmapid2 $tempvalue-$month-$slug.html");
 					#					unlink("$tempvalue-$month-$slug.html");
 					#					exit;
 					#				}

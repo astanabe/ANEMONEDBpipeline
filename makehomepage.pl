@@ -9,7 +9,6 @@ my $inputfolder = $ARGV[0];
 if (!-d $inputfolder) {
 	die(__LINE__);
 }
-my $url = $ARGV[1];
 my @loci;
 foreach my $temp (glob("$inputfolder/*")) {
 	if (-d $temp) {
@@ -171,23 +170,23 @@ foreach my $locus (@loci) {
 		}
 		print($filehandleoutput1 "<h2>List of submaps</h2>[subpages post_type=\"map\" depth=\"1\" post_status=\"publish\" sort_column=\"post_title\" sort_order=\"asc\"]");
 		close($filehandleoutput1);
-		my $maps = `wp post list --url='$url/' --post_type='map' --format=csv --fields=ID,post_name,post_parent`;
+		my $maps = `wp post list --post_type='map' --format=csv --fields=ID,post_name,post_parent`;
 		my $locusid;
 		if ($maps !~ /\d+,$locusslug,/) {
-			$locusid = `wp post create --url='$url/' --porcelain --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus ($nsamples)' --post_name='$locusslug' --post_excerpt='' --menu_order=1 $locus.html`;
+			$locusid = `wp post create --porcelain --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus ($nsamples)' --post_name='$locusslug' --post_excerpt='' --menu_order=1 $locus.html`;
 			$locusid =~ s/\r?\n?$//;
 		}
 		elsif ($maps =~ /(\d+),$locusslug,/) {
 			$locusid = $1;
-			system("wp post update --url='$url/' --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus ($nsamples)' --post_name='$locusslug' --post_excerpt='' --menu_order=1 $locusid $locus.html \&");
+			system("wp post update --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus ($nsamples)' --post_name='$locusslug' --post_excerpt='' --menu_order=1 $locusid $locus.html \&");
 		}
 		foreach my $meshcode1 (keys(%meshcode1)) {
 			if ($maps !~ /\d+,$locusslug$meshcode1,$locusid\n/) {
-				system("wp post create --url='$url/' --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus - $meshcode1 ($meshcode1{$meshcode1})' --post_name='$locusslug$meshcode1' --post_parent='$locusid' --post_excerpt='' $locus$meshcode1.html \&");
+				system("wp post create --post_author=1 --post_type='map' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus - $meshcode1 ($meshcode1{$meshcode1})' --post_name='$locusslug$meshcode1' --post_parent='$locusid' --post_excerpt='' $locus$meshcode1.html \&");
 			}
 			elsif ($maps =~ /(\d+),$locusslug$meshcode1,$locusid\n/) {
 				my $locusmeshcode1id = $1;
-				system("wp post update --url='$url/' --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus - $meshcode1 ($meshcode1{$meshcode1})' --post_name='$locusslug$meshcode1' --post_parent='$locusid' --post_excerpt='' $locusmeshcode1id $locus$meshcode1.html \&");
+				system("wp post update --post_type='map' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$locus - $meshcode1 ($meshcode1{$meshcode1})' --post_name='$locusslug$meshcode1' --post_parent='$locusid' --post_excerpt='' $locusmeshcode1id $locus$meshcode1.html \&");
 			}
 		}
 	}
@@ -218,13 +217,13 @@ foreach my $locus (@loci) {
 	}
 	print($filehandleoutput1 "<h2>List of top-level metabarcoding maps</h2>[pagelist post_type=\"map\" depth=\"1\" post_status=\"publish\" sort_column=\"menu_order,post_title\" sort_order=\"asc\"][/if-login]");
 	close($filehandleoutput1);
-	my $pages = `wp post list --url='$url/' --post_type='page' --format=csv --fields=ID,post_name`;
+	my $pages = `wp post list --post_type='page' --format=csv --fields=ID,post_name`;
 	if ($pages !~ /\d+,home\n/) {
-		system("wp post create --url='$url/' --post_author=1 --post_type='page' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='Home' --post_excerpt='' Home.html \&");
+		system("wp post create --post_author=1 --post_type='page' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='Home' --post_excerpt='' Home.html \&");
 	}
 	elsif ($pages =~ /(\d+),home\n/) {
 		my $homeid = $1;
-		system("wp post update --url='$url/' --post_type='page' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='Home' --post_excerpt='' $homeid Home.html \&");
+		system("wp post update --post_type='page' --post_author=1 --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='Home' --post_excerpt='' $homeid Home.html \&");
 	}
 }
 

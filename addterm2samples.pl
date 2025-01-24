@@ -11,7 +11,6 @@ my $inputfolder = $ARGV[0];
 if (!-d $inputfolder) {
 	die(__LINE__);
 }
-my $url = $ARGV[1];
 
 # store taxonomic hierarchy
 my %parents;
@@ -175,7 +174,7 @@ foreach my $locus (@loci) {
 }
 # make taxonomy taxon
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name,slug,parent taxon`;
+	my $terms = `wp term list --format=csv --fields=term_id,name,slug,parent taxon`;
 	foreach my $rankname ('superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species') {
 		foreach my $taxonname (sort(keys(%{$rankname2taxa{$rankname}}))) {
 			my $nonum= $taxonname;
@@ -190,10 +189,10 @@ foreach my $locus (@loci) {
 			}
 			if ($terms !~ /\d+,\"?$nonum\"?,$slug,\d+\n/) {
 				if (exists($parents{$taxonname}) && $parents{$taxonname} && exists($taxonid{$parents{$taxonname}}) && $taxonid{$parents{$taxonname}}) {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' --parent=$taxonid{$parents{$taxonname}} taxon '$nonum'`;
 				}
 				elsif ($rankname eq 'superkingdom') {
-					$taxonid{$taxonname} = `wp term create --url='$url/' --porcelain --slug='$slug' taxon '$nonum'`;
+					$taxonid{$taxonname} = `wp term create --porcelain --slug='$slug' taxon '$nonum'`;
 				}
 				elsif (exists($parents{$taxonname})) {
 					print(STDERR "There is no taxid of \"$parents{$taxonname}\" which is parent of \"$taxonname\".\n");
@@ -225,10 +224,10 @@ foreach my $locus (@loci) {
 }
 # make taxonomy yearmonth
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		if ($terms !~ /\d+,$year\n/) {
-			$yearmonthid{$year} = `wp term create --url='$url/' --porcelain yearmonth $year`;
+			$yearmonthid{$year} = `wp term create --porcelain yearmonth $year`;
 			$yearmonthid{$year} =~ s/\r?\n?$//;
 		}
 		elsif ($terms =~ /(\d+),$year\n/) {
@@ -237,7 +236,7 @@ foreach my $locus (@loci) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if ($terms !~ /\d+,$year-$month\n/) {
 				if (exists($yearmonthid{$year}) && $yearmonthid{$year}) {
-					$yearmonthid{"$year-$month"} = `wp term create --url='$url/' --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
+					$yearmonthid{"$year-$month"} = `wp term create --porcelain --parent=$yearmonthid{$year} yearmonth $year-$month`;
 					$yearmonthid{"$year-$month"} =~ s/\r?\n?$//;
 				}
 			}
@@ -248,12 +247,12 @@ foreach my $locus (@loci) {
 	}
 }
 {
-	my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name yearmonth`;
+	my $terms = `wp term list --format=csv --fields=term_id,name yearmonth`;
 	foreach my $year (sort(keys(%yearmonth))) {
 		foreach my $month (sort(keys(%{$yearmonth{$year}}))) {
 			if (!exists($yearmonthid{$month})) {
 				if ($terms !~ /\d+,$month\n/) {
-					$yearmonthid{$month} = `wp term create --url='$url/' --porcelain yearmonth $month`;
+					$yearmonthid{$month} = `wp term create --porcelain yearmonth $month`;
 					$yearmonthid{$month} =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$month\n/) {
@@ -277,9 +276,9 @@ foreach my $locus (@loci) {
 		}
 		my $locusid;
 		{
-			my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+			my $terms = `wp term list --format=csv --fields=term_id,name project`;
 			if ($terms !~ /\d+,$locus\n/) {
-				$locusid = `wp term create --url='$url/' --porcelain project $locus`;
+				$locusid = `wp term create --porcelain project $locus`;
 				$locusid =~ s/\r?\n?$//;
 			}
 			elsif ($terms =~ /(\d+),$locus\n/) {
@@ -296,9 +295,9 @@ foreach my $locus (@loci) {
 			}
 			my $teamid;
 			if ($locusid) {
-				my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+				my $terms = `wp term list --format=csv --fields=term_id,name project`;
 				if ($terms !~ /\d+,$team\n/) {
-					$teamid = `wp term create --url='$url/' --parent=$locusid --porcelain project $team`;
+					$teamid = `wp term create --parent=$locusid --porcelain project $team`;
 					$teamid =~ s/\r?\n?$//;
 				}
 				elsif ($terms =~ /(\d+),$team\n/) {
@@ -315,9 +314,9 @@ foreach my $locus (@loci) {
 				}
 				my $projectid;
 				if ($teamid) {
-					my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+					my $terms = `wp term list --format=csv --fields=term_id,name project`;
 					if ($terms !~ /\d+,$project\n/) {
-						$projectid = `wp term create --url='$url/' --parent=$teamid --porcelain project $project`;
+						$projectid = `wp term create --parent=$teamid --porcelain project $project`;
 						$projectid =~ s/\r?\n?$//;
 					}
 					elsif ($terms =~ /(\d+),$project\n/) {
@@ -334,9 +333,9 @@ foreach my $locus (@loci) {
 					}
 					my $runid;
 					if ($projectid) {
-						my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name project`;
+						my $terms = `wp term list --format=csv --fields=term_id,name project`;
 						if ($terms !~ /\d+,$run\n/) {
-							$runid = `wp term create --url='$url/' --parent=$projectid --porcelain project $run`;
+							$runid = `wp term create --parent=$projectid --porcelain project $run`;
 							$runid =~ s/\r?\n?$//;
 						}
 						elsif ($terms =~ /(\d+),$run\n/) {
@@ -382,9 +381,9 @@ foreach my $locus (@loci) {
 							close($filehandleinput1);
 							my $meshcode2id;
 							if (exists($sampletable{'worldmesh'}) && $sampletable{'worldmesh'} > 0) {
-								my $terms = `wp term list --url='$url/' --format=csv --fields=term_id,name meshcode2`;
+								my $terms = `wp term list --format=csv --fields=term_id,name meshcode2`;
 								if ($terms !~ /\d+,$sampletable{'worldmesh'}\n/) {
-									$meshcode2id = `wp term create --url='$url/' --porcelain meshcode2 $sampletable{'worldmesh'}`;
+									$meshcode2id = `wp term create --porcelain meshcode2 $sampletable{'worldmesh'}`;
 									$meshcode2id =~ s/\r?\n?$//;
 								}
 								elsif ($terms =~ /(\d+),$sampletable{'worldmesh'}\n/) {
@@ -392,7 +391,7 @@ foreach my $locus (@loci) {
 								}
 							}
 							{
-								my $samples = `wp post list --url='$url/' --post_type='sample' --format=csv --fields=ID,post_title`;
+								my $samples = `wp post list --post_type='sample' --format=csv --fields=ID,post_title`;
 								my $sampleid;
 								if ($samples =~ /(\d+),$sample\n/) {
 									$sampleid = $1;
@@ -400,50 +399,50 @@ foreach my $locus (@loci) {
 								# add meshcode2
 								if ($sampleid && exists($sampletable{'worldmesh'})) {
 									print(STDERR "Adding meshcode2 \"$sampletable{'worldmesh'}\" to sample $sampleid...\n");
-									#my $terms = `wp post term list --url='$url/' --format=csv --fields=term_id,name $sampleid meshcode2`;
+									#my $terms = `wp post term list --format=csv --fields=term_id,name $sampleid meshcode2`;
 									#if ($terms =~ /(\d+),(\d+)\n/ && ($1 != $meshcode2id || $2 != $sampletable{'worldmesh'})) {
-										system("wp post term remove --url='$url/' --all $sampleid meshcode2");
+										system("wp post term remove --all $sampleid meshcode2");
 									#	$terms = '';
 									#}
 									if (exists($sampletable{'worldmesh'}) && $sampletable{'worldmesh'}) {
 										#if ($terms !~ /$meshcode2id,$sampletable{'worldmesh'}\n/) {
-											system("wp post term add --url='$url/' $sampleid meshcode2 $sampletable{'worldmesh'}");
+											system("wp post term add $sampleid meshcode2 $sampletable{'worldmesh'}");
 										#}
 									}
 								}
 								# add project
 								if ($sampleid && $run && $runid) {
 									print(STDERR "Adding project \"$run\" to sample $sampleid...\n");
-									#my $terms = `wp post term list --url='$url/' --format=csv --fields=term_id,name $sampleid project`;
+									#my $terms = `wp post term list --format=csv --fields=term_id,name $sampleid project`;
 									#if ($terms =~ /(\d+),(\S+)\n/ && ($1 != $runid || $2 ne $run)) {
-										system("wp post term remove --url='$url/' --all $sampleid project");
+										system("wp post term remove --all $sampleid project");
 									#	$terms = '';
 									#}
 									#if ($terms !~ /$runid,$run\n/) {
-										system("wp post term add --url='$url/' $sampleid project $run");
+										system("wp post term add $sampleid project $run");
 									#}
 								}
 								# add year, month, and year-month
 								if ($sampleid && $month && $year) {
 									print(STDERR "Adding month $month and year $year to sample $sampleid...\n");
-									#my $terms = `wp post term list --url='$url/' --format=csv --fields=term_id,name $sampleid yearmonth`;
-									system("wp post term remove --url='$url/' --all $sampleid yearmonth");
+									#my $terms = `wp post term list --format=csv --fields=term_id,name $sampleid yearmonth`;
+									system("wp post term remove --all $sampleid yearmonth");
 									#if ($terms !~ /$yearmonthid{$year},$year\n/) {
-									#	system("wp post term add --url='$url/' $sampleid yearmonth $year");
+									#	system("wp post term add $sampleid yearmonth $year");
 									#}
 									#if ($terms !~ /$yearmonthid{$month},$month\n/) {
-										system("wp post term add --url='$url/' $sampleid yearmonth $month");
+										system("wp post term add $sampleid yearmonth $month");
 									#}
 									my $yearmonth = "$year-$month";
 									#if ($terms !~ /$yearmonthid{$yearmonth},$yearmonth\n/) {
-										system("wp post term add --url='$url/' $sampleid yearmonth $yearmonth");
+										system("wp post term add $sampleid yearmonth $yearmonth");
 									#}
 								}
 								#$filehandleinput1 = &readFile("$inputfolder/$locus/$team/$project/$run/$sample/community_qc3nn_target.tsv.xz");
 								#while (<$filehandleinput1>) {
 								#	if (/([ACGT]{20,})/) {
 								#		my $sequence = $1;
-								#		system("wp post meta add --url='$url/' $sampleid sequence $sequence");
+								#		system("wp post meta add $sampleid sequence $sequence");
 								#	}
 								#}
 								#close($filehandleinput1);
@@ -495,7 +494,7 @@ foreach my $locus (@loci) {
 								}
 								close($filehandleinput1);
 								{
-									my $terms = `wp post term list --url='$url/' --format=csv --fields=term_id,slug $sampleid taxon`;
+									my $terms = `wp post term list --format=csv --fields=term_id,slug $sampleid taxon`;
 									foreach (@dedup) {
 										my @row = split(/;/, $_);
 										my %combinedtaxonname;
@@ -525,7 +524,7 @@ foreach my $locus (@loci) {
 										if ($parent) {
 											if ($terms !~ /$taxonid{$parent},$taxon2slug{$parent}\n/) {
 												print(STDERR "Adding taxonomy \"$parent\" to sample $sampleid...\n");
-												system("wp post term add --url='$url/' $sampleid taxon $taxon2slug{$parent}");
+												system("wp post term add $sampleid taxon $taxon2slug{$parent}");
 											}
 										}
 									}
