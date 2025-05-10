@@ -560,7 +560,7 @@ while (wait != -1) {
 								print($filehandleoutput1 <<"_END");
 <h2>Data file download URL</h2>
 <ul>
-<li><a href=\"/dist/$locus/$team/$project/$run/$sample/\"><?php echo esc_url( home_url() ); ?>/dist/$locus/$team/$project/$run/$sample/</a></li>
+<li><a href=\"/dist/$locus/$team/$project/$run/$sample/\"><?php echo home_url(); ?>/dist/$locus/$team/$project/$run/$sample/</a></li>
 </ul>
 <h2>Sample information</h2>
 <ul>
@@ -635,7 +635,7 @@ _END
 								if ($wordcloudphylum) {
 									print($filehandleoutput1 "<h2>Phylum composition</h2><p style=\"text-align: center;\"><a href=\"$wordcloudphylum\"><img src=\"$wordcloudphylum\" alt=\"Wordcloud image of phylum composition of $sample\" /></a></p>");
 								}
-								print($filehandleoutput1 "<h2>Complete community composition</h2><table>");
+								print($filehandleoutput1 "<h2>Complete community composition</h2><div class=\"hscrolltable\"><table>");
 								$filehandleinput1 = &readFile("$inputfolder/$locus/$team/$project/$run/$sample/community_qc3nn_target.tsv.xz");
 								{
 									my $lineno = 1;
@@ -713,7 +713,7 @@ _END
 								}
 								print($filehandleoutput1 "</tbody>\n");
 								close($filehandleinput1);
-								print($filehandleoutput1 "</table>");
+								print($filehandleoutput1 "</table></div>");
 								close($filehandleoutput1);
 								# make or update sample page
 								system("wp post update --post_author=1 --post_type='sample' --comment_status='closed' --ping_status='closed' --post_status='publish' --post_title='$sample' --post_date_gmt='$sampletable{'collection_date_utc'}' --post_date='$sampletable{'collection_date_local'}' --post_excerpt='$locus metabarcoding sample by $sampletable{'correspondence'}' $sampleid $inputfolder/$locus/$team/$project/$run/$sample/wordpress.html");

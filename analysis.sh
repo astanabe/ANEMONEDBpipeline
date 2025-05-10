@@ -139,6 +139,22 @@ cp \
 fi
 # Demultiplex Type B (If FASTQ files have been already demultiplexed)
 if ! test -d "$tempfolder/demultiplexed"; then
+if test -e "$runfolder/replacelist.txt"; then
+cltruncprimer \
+--replacelist="$runfolder/replacelist.txt" \
+--runname="$project$run" \
+--forwardprimerfile="$runfolder/forwardprimer.fasta" \
+--reverseprimerfile="$runfolder/reverseprimer.fasta" \
+--truncateN=enable \
+--outputmultihit=enable \
+--index1file="$runfolder/index1.fasta" \
+--index2file="$runfolder/index2.fasta" \
+--seqnamestyle=illumina \
+--compress=xz \
+--numthreads="$THREADS" \
+"$tempfolder/fastq_demultiplexed" \
+"$tempfolder/demultiplexed" || exit $?
+else
 cltruncprimer \
 --runname="$project$run" \
 --forwardprimerfile="$runfolder/forwardprimer.fasta" \
@@ -152,6 +168,7 @@ cltruncprimer \
 --numthreads="$THREADS" \
 "$tempfolder/fastq_demultiplexed" \
 "$tempfolder/demultiplexed" || exit $?
+fi
 fi
 # Delete temporary FASTQ files
 rm -rf "$tempfolder/fastq_demultiplexed" || exit $?
